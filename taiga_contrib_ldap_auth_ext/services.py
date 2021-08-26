@@ -34,7 +34,10 @@ SAVE_USER_PASSWD = getattr(settings, 'LDAP_SAVE_LOGIN_PASSWORD', True)
 
 # TODO https://github.com/Monogramm/taiga-contrib-ldap-auth-ext/issues/17
 # Taiga super users group id
-GROUP_ADMIN = getattr(settings, 'LDAP_GROUP_ADMIN', '')
+ADMIN_GROUP = getattr(settings, 'LDAP_ADMIN_GROUP', '')
+
+# Flag: use username or dn for admin query
+ADMIN_GROUP_USE_DN = getattr(settings, "LDAP_ADMIN_GROUP_USE_DN", True)
 
 
 def ldap_login_func(request):
@@ -57,7 +60,7 @@ def ldap_login_func(request):
 
     try:
         # TODO: make sure these fields are sanitized before passing to LDAP server!
-        username, email, full_name = connector.login(
+        username, email, full_name, dn = connector.login(
             username=login_input, password=password_input)
     except connector.LDAPUserLoginError as ldap_error:
         # If no fallback authentication is specified, raise the original LDAP error
@@ -84,7 +87,7 @@ def ldap_login_func(request):
 
 
 @tx.atomic
-def register_or_update(username: str, email: str, full_name: str, password: str):
+def register_or_update(username: str, email: str, full_name: str, password: str, dn: str):
     """
     Register new or update existing user in Django DB from LDAP data.
 
@@ -106,8 +109,9 @@ def register_or_update(username: str, email: str, full_name: str, password: str)
 
     # TODO https://github.com/Monogramm/taiga-contrib-ldap-auth-ext/issues/15
     # TODO https://github.com/Monogramm/taiga-contrib-ldap-auth-ext/issues/17
-    if GROUP_ADMIN:
-        superuser = connector.is_user_in_group(username, GROUP_ADMIN)
+    if ADMIN_GROUP:
+        query_name = dn if ADMIN_GROUP_USE_DN else username
+        superuser = connector.is_user_in_group(query_name, ADMIN_GROUP)
     else:
         superuser = False
     # INFO the user also needs to be staff member to access the admin panel

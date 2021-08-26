@@ -47,6 +47,7 @@ TLS_CERTS = getattr(settings, "LDAP_TLS_CERTS", "")
 START_TLS = getattr(settings, "LDAP_START_TLS", False)
 
 ADMIN_GROUP_CLASS = getattr(settings, "LDAP_ADMIN_GROUP_CLASS", "posixGroup")
+# e.g., memberUid or uniqueMember
 ADMIN_GROUP_MEMBER_ATTRIBUTE = getattr(settings, "LDAP_ADMIN_GROUP_MEMBER_ATTRIBUTE",
                                        "memberUid")
 
@@ -176,7 +177,7 @@ def login(username: str, password: str) -> tuple:
 
     # LDAP binding successful, but some values might have changed, or
     # this is the user's first login, so return them
-    return (username, email, full_name)
+    return username, email, full_name, dn
 
 
 def is_user_in_group(username: str, group: str) -> bool:
