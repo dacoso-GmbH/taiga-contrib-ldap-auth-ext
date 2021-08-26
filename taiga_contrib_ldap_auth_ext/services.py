@@ -81,7 +81,7 @@ def ldap_login_func(request):
     else:
         # LDAP Auth successful
         user = register_or_update(
-            username=username, email=email, full_name=full_name, password=password_input)
+            username=username, email=email, full_name=full_name, password=password_input, dn=dn)
         data = make_auth_response_data(user)
         return data
 
